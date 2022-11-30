@@ -28,12 +28,8 @@
     <!-- android, now build with gradle instead of ant -->
     <platform name="android">
         <preference name="ADMOB_ANDROID_APP_ID" default="ca-app-pub-1855415514372943~9063671314"/>
-        <preference name="PLAY_SERVICES_VERSION" default="20.4.0"/>
-        <!-- you can specify another play services version to avoid conflict with another plugin -->
-        <!-- Notice: 20.5.0 will cause a conflict,
-         of minCompileSdk (31) and compileSdkVersion (android-30),
-         in Dependency: androidx.work:work-runtime:2.7.0 -->
-
+        <preference name="PLAY_SERVICES_VERSION" default="21.1.0"/>
+        
         <!-- cordova CLI using gradle and it working well -->
 	    <framework src="com.google.android.gms:play-services-ads:$PLAY_SERVICES_VERSION" />
 
