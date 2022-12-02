@@ -6,7 +6,10 @@ import java.util.Iterator;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.apache.cordova.CallbackContext;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
