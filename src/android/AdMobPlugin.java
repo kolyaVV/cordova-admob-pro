@@ -821,4 +821,15 @@ public class AdMobPlugin extends GenericAdPlugin {
     }
     return errorReason;
   }
+    
+	@Override
+	public boolean execute(String action, JSONArray inputs, CallbackContext callbackContext) throws JSONException {
+		Log.d(TAG, "execute: " + action);
+        if("initConsent".equals(action)) {
+			JSONObject obj = inputs.optJSONObject(0);            
+            this.initConsent(obj);
+            return true;
+        }
+		return super.execute( action, inputs, callbackContext );
+	}
 }
