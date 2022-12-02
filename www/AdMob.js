@@ -68,6 +68,16 @@ admobExport.setOptions = function(options, successCallback, failureCallback) {
   }
 };
 
+admobExport.initConsent = function(options, successCallback, failureCallback) {
+  if(typeof options === 'object') {
+    cordova.exec( successCallback, failureCallback, 'AdMob', 'initConsent', [options] );
+  } else {
+    if(typeof failureCallback === 'function') {
+      failureCallback('options should be specified.');
+    }
+  }
+};
+
 admobExport.createBanner = function(args, successCallback, failureCallback) {
   var options = {};
   if(typeof args === 'object') {

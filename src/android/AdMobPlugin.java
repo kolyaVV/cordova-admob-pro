@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -37,6 +38,13 @@ import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback ;
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.ads.mediation.admob.AdMobAdapter;
+
+import com.google.android.ump.ConsentForm;
+import com.google.android.ump.ConsentInformation;
+import com.google.android.ump.ConsentRequestParameters;
+import com.google.android.ump.ConsentDebugSettings;
+import com.google.android.ump.FormError;
+import com.google.android.ump.UserMessagingPlatform;
 
 import com.rjfun.cordova.ad.GenericAdPlugin;
 
@@ -78,6 +86,9 @@ public class AdMobPlugin extends GenericAdPlugin {
   private AdManagerInterstitialAd mAdManagerInterstitialAd = null;
   private InterstitialAd mInterstitialAd = null;
   private RewardedAd mRewardedAd = null;
+  
+  private ConsentInformation consentInformation;
+  private ConsentForm consentForm;
 
   private HashMap<String, AdMobMediation> mediations = new HashMap<String, AdMobMediation>();
 
@@ -104,6 +115,47 @@ public class AdMobPlugin extends GenericAdPlugin {
   @Override
   protected String __getTestRewardVideoId() { return TEST_REWARDVIDEO_ID; }
 
+  public void initConsent(JSONObject options) {
+	Boolean debugMode = options.optBoolean("isTesting");	  
+	Log.d(TAG, "Consent init ( testing: " + debugMode + ")" );			
+	// Set tag for underage of consent. Here false means users are not underage.
+	ConsentRequestParameters.Builder paramsBuilder = new ConsentRequestParameters
+		.Builder()			
+		.setTagForUnderAgeOfConsent(false);
+	
+	if(debugMode) {			
+		Log.d(TAG, "isTesting, add ConsentDebugSettings" );
+		ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(cordova.getActivity())
+			.setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+			.addTestDeviceHashedId("51ED3C371C84C345E60C92DA1A68ADC3")
+			.build();
+		paramsBuilder.setConsentDebugSettings(debugSettings);
+	}
+	
+	consentInformation = UserMessagingPlatform.getConsentInformation(cordova.getContext());
+	consentInformation.requestConsentInfoUpdate(
+		cordova.getActivity(),
+		paramsBuilder.build(),
+		new ConsentInformation.OnConsentInfoUpdateSuccessListener() {
+		  @Override
+		  public void onConsentInfoUpdateSuccess() {
+			// The consent information state was updated.
+			// You are now ready to check if a form is available.
+			Log.d(TAG, "onConsentInfoUpdateSuccess");
+			if (consentInformation.isConsentFormAvailable()) {
+			  loadForm();
+			}
+		  }
+		},
+		new ConsentInformation.OnConsentInfoUpdateFailureListener() {
+		  @Override
+		  public void onConsentInfoUpdateFailure(FormError formError) {
+			// Handle the error.
+			Log.d(TAG, "onConsentInfoUpdateFailure " + formError.getMessage() );
+		  }
+		});  
+  }
+  
   private void ensureInited() {
     synchronized (mLock) {
       if (!mInited) {
@@ -116,6 +168,35 @@ public class AdMobPlugin extends GenericAdPlugin {
       }
     }
   }
+  
+ public void loadForm() {
+	  Log.d(TAG, "loadForm" );
+	  UserMessagingPlatform.loadConsentForm(
+		  cordova.getContext(), new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
+			@Override
+			public void onConsentFormLoadSuccess(ConsentForm consentForm) {
+			  //MainActivity.this.consentForm = consentForm;
+			  if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
+				consentForm.show(
+					cordova.getActivity(),
+						new ConsentForm.OnConsentFormDismissedListener() {
+						  @Override
+						  public void onConsentFormDismissed(@Nullable FormError formError) {
+							// Handle dismissal by reloading form.
+							loadForm();
+						  }
+						});
+			  }
+			}
+		  },
+		  new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
+			@Override
+			public void onConsentFormLoadFailure(FormError formError) {
+			  // Handle the error.
+			  Log.d(TAG, "OnConsentFormLoadFailureListener " +formError.getMessage() );
+			}
+		  });
+	}
 
   private boolean optBool(JSONObject options, String key) {
     if(options.optBoolean(key)) return true;

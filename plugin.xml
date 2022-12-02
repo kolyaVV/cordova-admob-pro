@@ -29,9 +29,11 @@
     <platform name="android">
         <preference name="ADMOB_ANDROID_APP_ID" default="ca-app-pub-1855415514372943~9063671314"/>
         <preference name="PLAY_SERVICES_VERSION" default="21.1.0"/>
+        <preference name="UMP_VERSION" default="2.0.0"/>
         
         <!-- cordova CLI using gradle and it working well -->
 	    <framework src="com.google.android.gms:play-services-ads:$PLAY_SERVICES_VERSION" />
+		<framework src="com.google.android.ump:user-messaging-platform:$UMP_VERSION" />
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity
