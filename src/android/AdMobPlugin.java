@@ -17,7 +17,9 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.content.res.Resources;
 
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.AdError;
@@ -66,7 +68,7 @@ public class AdMobPlugin extends GenericAdPlugin {
   private static final String TEST_INTERSTITIAL_ID = "ca-app-pub-3940256099942544/1033173712";
   private static final String TEST_REWARDVIDEO_ID = "ca-app-pub-3940256099942544/5224354917";
 
-  private AdSize adSize = AdSize.BANNER;
+  private AdSize adSize = AdSize.SMART_BANNER;
 
   private boolean mInited = false;
   private final Object mLock = new Object();
@@ -89,7 +91,7 @@ public class AdMobPlugin extends GenericAdPlugin {
   private AdManagerInterstitialAd mAdManagerInterstitialAd = null;
   private InterstitialAd mInterstitialAd = null;
   private RewardedAd mRewardedAd = null;
-  
+
   private ConsentInformation consentInformation;
   private ConsentForm consentForm;
 
@@ -119,46 +121,46 @@ public class AdMobPlugin extends GenericAdPlugin {
   protected String __getTestRewardVideoId() { return TEST_REWARDVIDEO_ID; }
 
   public void initConsent(JSONObject options) {
-	Boolean debugMode = options.optBoolean("isTesting");	  
-	Log.d(TAG, "Consent init ( testing: " + debugMode + ")" );			
-	// Set tag for underage of consent. Here false means users are not underage.
-	ConsentRequestParameters.Builder paramsBuilder = new ConsentRequestParameters
-		.Builder()			
-		.setTagForUnderAgeOfConsent(false);
-	
-	if(debugMode) {			
-		Log.d(TAG, "isTesting, add ConsentDebugSettings" );
-		ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(cordova.getActivity())
-			.setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
-			.addTestDeviceHashedId("51ED3C371C84C345E60C92DA1A68ADC3")
-			.build();
-		paramsBuilder.setConsentDebugSettings(debugSettings);
-	}
-	
-	consentInformation = UserMessagingPlatform.getConsentInformation(cordova.getContext());
-	consentInformation.requestConsentInfoUpdate(
-		cordova.getActivity(),
-		paramsBuilder.build(),
-		new ConsentInformation.OnConsentInfoUpdateSuccessListener() {
-		  @Override
-		  public void onConsentInfoUpdateSuccess() {
-			// The consent information state was updated.
-			// You are now ready to check if a form is available.
-			Log.d(TAG, "onConsentInfoUpdateSuccess");
-			if (consentInformation.isConsentFormAvailable()) {
-			  loadForm();
-			}
-		  }
-		},
-		new ConsentInformation.OnConsentInfoUpdateFailureListener() {
-		  @Override
-		  public void onConsentInfoUpdateFailure(FormError formError) {
-			// Handle the error.
-			Log.d(TAG, "onConsentInfoUpdateFailure " + formError.getMessage() );
-		  }
-		});  
+    Boolean debugMode = options.optBoolean("isTesting");
+    Log.d(TAG, "Consent init ( testing: " + debugMode + ")" );
+    // Set tag for underage of consent. Here false means users are not underage.
+    ConsentRequestParameters.Builder paramsBuilder = new ConsentRequestParameters
+            .Builder()
+            .setTagForUnderAgeOfConsent(false);
+
+    if(debugMode) {
+      Log.d(TAG, "isTesting, add ConsentDebugSettings" );
+      ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(cordova.getActivity())
+              .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+              .addTestDeviceHashedId("51ED3C371C84C345E60C92DA1A68ADC3")
+              .build();
+      paramsBuilder.setConsentDebugSettings(debugSettings);
+    }
+
+    consentInformation = UserMessagingPlatform.getConsentInformation(cordova.getContext());
+    consentInformation.requestConsentInfoUpdate(
+            cordova.getActivity(),
+            paramsBuilder.build(),
+            new ConsentInformation.OnConsentInfoUpdateSuccessListener() {
+              @Override
+              public void onConsentInfoUpdateSuccess() {
+                // The consent information state was updated.
+                // You are now ready to check if a form is available.
+                Log.d(TAG, "onConsentInfoUpdateSuccess");
+                if (consentInformation.isConsentFormAvailable()) {
+                  loadForm();
+                }
+              }
+            },
+            new ConsentInformation.OnConsentInfoUpdateFailureListener() {
+              @Override
+              public void onConsentInfoUpdateFailure(FormError formError) {
+                // Handle the error.
+                Log.d(TAG, "onConsentInfoUpdateFailure " + formError.getMessage() );
+              }
+            });
   }
-  
+
   private void ensureInited() {
     synchronized (mLock) {
       if (!mInited) {
@@ -171,35 +173,35 @@ public class AdMobPlugin extends GenericAdPlugin {
       }
     }
   }
-  
- public void loadForm() {
-	  Log.d(TAG, "loadForm" );
-	  UserMessagingPlatform.loadConsentForm(
-		  cordova.getContext(), new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
-			@Override
-			public void onConsentFormLoadSuccess(ConsentForm consentForm) {
-			  //MainActivity.this.consentForm = consentForm;
-			  if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
-				consentForm.show(
-					cordova.getActivity(),
-						new ConsentForm.OnConsentFormDismissedListener() {
-						  @Override
-						  public void onConsentFormDismissed(@Nullable FormError formError) {
-							// Handle dismissal by reloading form.
-							loadForm();
-						  }
-						});
-			  }
-			}
-		  },
-		  new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
-			@Override
-			public void onConsentFormLoadFailure(FormError formError) {
-			  // Handle the error.
-			  Log.d(TAG, "OnConsentFormLoadFailureListener " +formError.getMessage() );
-			}
-		  });
-	}
+
+  public void loadForm() {
+    Log.d(TAG, "loadForm" );
+    UserMessagingPlatform.loadConsentForm(
+            cordova.getContext(), new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
+              @Override
+              public void onConsentFormLoadSuccess(ConsentForm consentForm) {
+                //MainActivity.this.consentForm = consentForm;
+                if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
+                  consentForm.show(
+                          cordova.getActivity(),
+                          new ConsentForm.OnConsentFormDismissedListener() {
+                            @Override
+                            public void onConsentFormDismissed(@Nullable FormError formError) {
+                              // Handle dismissal by reloading form.
+                              loadForm();
+                            }
+                          });
+                }
+              }
+            },
+            new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
+              @Override
+              public void onConsentFormLoadFailure(FormError formError) {
+                // Handle the error.
+                Log.d(TAG, "OnConsentFormLoadFailureListener " +formError.getMessage() );
+              }
+            });
+  }
 
   private boolean optBool(JSONObject options, String key) {
     if(options.optBoolean(key)) return true;
@@ -210,11 +212,24 @@ public class AdMobPlugin extends GenericAdPlugin {
     return false;
   }
 
+  private AdSize getAdSize() {
+    // Step 1 - Determine the screen width (less decorations) to use for the ad width.
+    DisplayMetrics outMetrics = Resources.getSystem().getDisplayMetrics();
+
+    float widthPixels = outMetrics.widthPixels;
+    float density = outMetrics.density;
+
+    int adWidth = (int) (widthPixels / density);
+    // Step 2 - Get adaptive ad size and return for setting on the ad view.
+    return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(cordova.getContext(), adWidth);
+  }
+
   @Override
   public void setOptions(JSONObject options) {
     super.setOptions(options);
 
-    if(options.has(OPT_AD_SIZE)) adSize = adSizeFromString(options.optString(OPT_AD_SIZE));
+    if(options.has(OPT_AD_SIZE) && options.optString(OPT_AD_SIZE).equals("ANCHORED_ADAPTIVE_BANNER")) adSize = getAdSize();
+    if(options.has(OPT_AD_SIZE) && (adSize == AdSize.INVALID || !options.optString(OPT_AD_SIZE).equals("ANCHORED_ADAPTIVE_BANNER"))) adSize = adSizeFromString(options.optString(OPT_AD_SIZE));
     if(adSize == null) {
       adSize = new AdSize(adWidth, adHeight);
     }
@@ -628,13 +643,13 @@ public class AdMobPlugin extends GenericAdPlugin {
     });
 
     mRewardedAd.show(getActivity(), new OnUserEarnedRewardListener() {
-        @Override
-        public void onUserEarnedReward(@NonNull RewardItem reward) {
-          String obj = __getProductShortName();
-          String json = String.format("{'adNetwork':'%s','adType':'%s','adEvent':'%s','rewardType':'%s','rewardAmount':%d}",
-                  obj, ADTYPE_REWARDVIDEO, EVENT_AD_PRESENT, reward.getType(), reward.getAmount());
-          fireEvent(obj, EVENT_AD_PRESENT, json);
-        }
+      @Override
+      public void onUserEarnedReward(@NonNull RewardItem reward) {
+        String obj = __getProductShortName();
+        String json = String.format("{'adNetwork':'%s','adType':'%s','adEvent':'%s','rewardType':'%s','rewardAmount':%d}",
+                obj, ADTYPE_REWARDVIDEO, EVENT_AD_PRESENT, reward.getType(), reward.getAmount());
+        fireEvent(obj, EVENT_AD_PRESENT, json);
+      }
     });
   }
 
@@ -770,7 +785,7 @@ public class AdMobPlugin extends GenericAdPlugin {
    * document.addEventListener('onAdDismiss', function(data));
    * document.addEventListener('onAdLeaveApp', function(data));
    */
-   class BannerListener extends AdListener {
+  class BannerListener extends AdListener {
     @SuppressLint("DefaultLocale")
     @Override
     public void onAdFailedToLoad(LoadAdError var1) {
@@ -803,7 +818,7 @@ public class AdMobPlugin extends GenericAdPlugin {
     @Override
     public void onAdImpression() {
     }
-   }
+  }
 
   /** Gets a string error reason from an error code. */
   public String getErrorReason(int errorCode) {
@@ -824,15 +839,16 @@ public class AdMobPlugin extends GenericAdPlugin {
     }
     return errorReason;
   }
-    
-	@Override
-	public boolean execute(String action, JSONArray inputs, CallbackContext callbackContext) throws JSONException {
-		Log.d(TAG, "execute: " + action);
-        if("initConsent".equals(action)) {
-			JSONObject obj = inputs.optJSONObject(0);            
-            this.initConsent(obj);
-            return true;
-        }
-		return super.execute( action, inputs, callbackContext );
-	}
+
+  @Override
+  public boolean execute(String action, JSONArray inputs, CallbackContext callbackContext) throws JSONException {
+    Log.d(TAG, "execute: " + action);
+    if("initConsent".equals(action)) {
+      JSONObject obj = inputs.optJSONObject(0);
+      this.initConsent(obj);
+      return true;
+    }
+    return super.execute( action, inputs, callbackContext );
+  }
 }
+
